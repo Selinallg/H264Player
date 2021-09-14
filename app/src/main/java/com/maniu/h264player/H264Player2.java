@@ -57,7 +57,10 @@ public class H264Player2 implements Runnable {
             if (useAsyncDecode) {
                 mediaCodec.setCallback(callback);
             }
+            // 渲染到 surface
             mediaCodec.configure(mediaformat, surface, null, 0);
+            // 不渲染到 surface 获取YUV原始数据
+//            mediaCodec.configure(mediaformat, null, null, 0);
 
 
         } catch (Exception e) {
@@ -185,7 +188,7 @@ public class H264Player2 implements Runnable {
     }
 
 
-    boolean useAsyncDecode = false;
+    boolean useAsyncDecode = true;//  false 同步 true 异步 解码
     int     startIndex     = 0;
     int     totalSize      = 0;
 
@@ -228,6 +231,28 @@ public class H264Player2 implements Runnable {
             Log.d(TAG, "decodeH264: useTime=" + useTime);
             lastTimeMillis = currentTimeMillis;
 
+            // 不渲染到surface，保存到文件  start
+            if (index>0){
+                ByteBuffer outputBuffer = mediaCodec.getOutputBuffer(index);
+
+
+                if (outputBuffer != null) {
+                    outputBuffer.position(0);
+                    outputBuffer.limit(info.offset + info.size);
+                    byte[] yuvData = new byte[outputBuffer.remaining()];
+                    outputBuffer.get(yuvData);
+
+                    FileUtils.writeBytes(yuvData, "codec-YUV.h264");
+
+                    //mediaCodec.configure(mediaformat, null, null, 0);
+                    codec.releaseOutputBuffer(index, false);
+                    outputBuffer.clear();
+                    Log.d(TAG, "onOutputBufferAvailable: yuvData ==>"+yuvData.length);
+                    return;
+                }
+
+            }
+            // 不渲染到surface，保存到文件  end
             mediaCodec.releaseOutputBuffer(index, true);
         }
 

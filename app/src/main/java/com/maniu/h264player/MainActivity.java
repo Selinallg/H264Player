@@ -52,10 +52,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder holder) {
                 h264Player = new H264Player2(MainActivity.this,
-//                        new File(Environment.getExternalStorageDirectory(), "out.h264").getAbsolutePath(),
+                        new File(Environment.getExternalStorageDirectory(), "out.h264").getAbsolutePath(),
 //                        new File(Environment.getExternalStorageDirectory(), "source.h264").getAbsolutePath(),
 //                        new File(Environment.getExternalStorageDirectory(), "test1280.h264").getAbsolutePath(),
-                        new File(Environment.getExternalStorageDirectory(), "tmp22.h264").getAbsolutePath(),
+//                        new File(Environment.getExternalStorageDirectory(), "tmp22.h264").getAbsolutePath(),
                         surfaceHolder.getSurface());
                 h264Player.play();
             }
