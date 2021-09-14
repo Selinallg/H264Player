@@ -2,6 +2,7 @@ package com.maniu.h264player;
 
 import android.content.Context;
 import android.media.MediaCodec;
+import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.util.Log;
 import android.view.Surface;
@@ -54,13 +55,18 @@ public class H264Player2 implements Runnable {
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 368, 384);
 //            mediaformat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
 
+
             if (useAsyncDecode) {
                 mediaCodec.setCallback(callback);
             }
-            // 渲染到 surface
-            mediaCodec.configure(mediaformat, surface, null, 0);
-            // 不渲染到 surface 获取YUV原始数据
-//            mediaCodec.configure(mediaformat, null, null, 0);
+            if (useYUV) {
+                // 不渲染到 surface 获取YUV原始数据
+                mediaformat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
+                mediaCodec.configure(mediaformat, null, null, 0);
+            } else {
+                // 渲染到 surface
+                mediaCodec.configure(mediaformat, surface, null, 0);
+            }
 
 
         } catch (Exception e) {
@@ -70,7 +76,6 @@ public class H264Player2 implements Runnable {
 
     //MediaExtractor  视频      画面H264
     public void play() {
-
 
 
         //java线程本质是什么线程         linux线程
@@ -188,6 +193,7 @@ public class H264Player2 implements Runnable {
     }
 
 
+    boolean useYUV         = false;//
     boolean useAsyncDecode = true;//  false 同步 true 异步 解码
     int     startIndex     = 0;
     int     totalSize      = 0;
@@ -232,25 +238,27 @@ public class H264Player2 implements Runnable {
             lastTimeMillis = currentTimeMillis;
 
             // 不渲染到surface，保存到文件  start
-            if (index>0){
-                ByteBuffer outputBuffer = mediaCodec.getOutputBuffer(index);
+            if (useYUV){
+                if (index > 0) {
+                    ByteBuffer outputBuffer = mediaCodec.getOutputBuffer(index);
 
 
-                if (outputBuffer != null) {
-                    outputBuffer.position(0);
-                    outputBuffer.limit(info.offset + info.size);
-                    byte[] yuvData = new byte[outputBuffer.remaining()];
-                    outputBuffer.get(yuvData);
+                    if (outputBuffer != null) {
+                        outputBuffer.position(0);
+                        outputBuffer.limit(info.offset + info.size);
+                        byte[] yuvData = new byte[outputBuffer.remaining()];
+                        outputBuffer.get(yuvData);
 
-                    FileUtils.writeBytes(yuvData, "codec-YUV.h264");
+                        FileUtils.writeBytes(yuvData, "codec-YUV.h264");
 
-                    //mediaCodec.configure(mediaformat, null, null, 0);
-                    codec.releaseOutputBuffer(index, false);
-                    outputBuffer.clear();
-                    Log.d(TAG, "onOutputBufferAvailable: yuvData ==>"+yuvData.length);
-                    return;
+                        //mediaCodec.configure(mediaformat, null, null, 0);
+                        codec.releaseOutputBuffer(index, false);
+                        outputBuffer.clear();
+                        Log.d(TAG, "onOutputBufferAvailable: yuvData ==>" + yuvData.length);
+                        return;
+                    }
+
                 }
-
             }
             // 不渲染到surface，保存到文件  end
             mediaCodec.releaseOutputBuffer(index, true);
