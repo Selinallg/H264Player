@@ -1,4 +1,4 @@
-package com.maniu.h264player;
+package com.llg.h264player;
 
 import org.junit.Test;
 

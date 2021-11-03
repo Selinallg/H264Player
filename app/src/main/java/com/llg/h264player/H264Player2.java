@@ -1,4 +1,4 @@
-package com.maniu.h264player;
+package com.llg.h264player;
 
 import android.content.Context;
 import android.media.MediaCodec;
@@ -24,6 +24,8 @@ public class H264Player2 implements Runnable {
     private static final String  TAG = "H264Player";
     private              Context context;
 
+    private static final String  CODE_TYPE = "video/hevc";
+//    private static final String  CODE_TYPE = "video/avc";
     private String     path;
     //mediaCodec   手机硬件不一样    dsp  芯片  不一样
     //    解码H264  解压     android 硬编  兼容   dsp  1ms   7000k码率   700k码率    4k   8k
@@ -42,13 +44,14 @@ public class H264Player2 implements Runnable {
         try {
 //            h265  --ISO hevc  兼容 硬编   不兼容   电视    -----》8k  4K
             try {
-                mediaCodec = MediaCodec.createDecoderByType("video/avc");
+                mediaCodec = MediaCodec.createDecoderByType(CODE_TYPE);
             } catch (Exception e) {
 //                不支持硬编
             }
 
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 368, 384);
-            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 2880, 1600);
+            //MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 2880, 1600);
+            MediaFormat mediaformat = MediaFormat.createVideoFormat(CODE_TYPE, 2880, 1600);
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 4320, 2160);
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 2160, 4320);
 
@@ -213,7 +216,7 @@ public class H264Player2 implements Runnable {
                 );
             }
 
-            if (index >= 0) {
+            if (index > 0) {
 
                 int nextFrameStart = findByFrame(bytes, startIndex + 2, totalSize);
 
@@ -238,7 +241,7 @@ public class H264Player2 implements Runnable {
             lastTimeMillis = currentTimeMillis;
 
             // 不渲染到surface，保存到文件  start
-            if (useYUV){
+            if (useYUV) {
                 if (index > 0) {
                     ByteBuffer outputBuffer = mediaCodec.getOutputBuffer(index);
 

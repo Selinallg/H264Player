@@ -1,11 +1,10 @@
-package com.maniu.h264player;
+package com.llg.h264player;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -13,7 +12,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.File;
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     public boolean checkPermission() {
@@ -52,10 +50,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder holder) {
                 h264Player = new H264Player2(MainActivity.this,
-                        new File(Environment.getExternalStorageDirectory(), "out.h264").getAbsolutePath(),
-//                        new File(Environment.getExternalStorageDirectory(), "source.h264").getAbsolutePath(),
-//                        new File(Environment.getExternalStorageDirectory(), "test1280.h264").getAbsolutePath(),
-//                        new File(Environment.getExternalStorageDirectory(), "tmp22.h264").getAbsolutePath(),
+//                        new File(Environment.getExternalStorageDirectory(), "out.h264").getAbsolutePath(),
+                        new File(Environment.getExternalStorageDirectory(), "capture.h265").getAbsolutePath(),
                         surfaceHolder.getSurface());
                 h264Player.play();
             }

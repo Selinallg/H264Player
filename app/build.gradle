@@ -5,7 +5,7 @@ android {
     buildToolsVersion "30.0.2"
 
     defaultConfig {
-        applicationId "com.maniu.h264player"
+        applicationId "com.llg.h264player"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 1
