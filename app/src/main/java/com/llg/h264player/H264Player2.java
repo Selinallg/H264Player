@@ -24,7 +24,8 @@ public class H264Player2 implements Runnable {
     private static final String  TAG = "H264Player";
     private              Context context;
 
-    private static final String  CODE_TYPE = "video/hevc";
+//    private static final String  CODE_TYPE = MediaFormat.MIMETYPE_VIDEO_HEVC;
+    private static final String  CODE_TYPE = MediaFormat.MIMETYPE_VIDEO_AVC;
 //    private static final String  CODE_TYPE = "video/avc";
     private String     path;
     //mediaCodec   手机硬件不一样    dsp  芯片  不一样
