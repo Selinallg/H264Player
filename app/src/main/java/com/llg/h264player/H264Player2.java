@@ -35,6 +35,10 @@ public class H264Player2 implements Runnable {
     //画面
     private Surface    surface;
     private byte[]     bytes;
+    long lastTimeMillis;
+    long countTimeMillis;
+    int  count;
+
 
     public H264Player2(Context context, String path, Surface surface) {
 
@@ -114,7 +118,6 @@ public class H264Player2 implements Runnable {
         }
     }
 
-    long lastTimeMillis;
 
     private void decodeH264() {
 
@@ -243,6 +246,18 @@ public class H264Player2 implements Runnable {
             long useTime           = currentTimeMillis - lastTimeMillis;
             Log.d(TAG, "decodeH264: useTime=" + useTime);
             lastTimeMillis = currentTimeMillis;
+
+
+            count++;
+            long countTime = currentTimeMillis - countTimeMillis;
+            if (countTime >= 1000) {
+                Log.d(TAG, "popSample: 帧率：" + count);
+                count = 0;
+                countTimeMillis = currentTimeMillis;
+            }
+
+
+
 
             // 不渲染到surface，保存到文件  start
             if (useYUV) {
