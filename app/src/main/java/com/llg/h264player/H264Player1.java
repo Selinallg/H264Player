@@ -111,6 +111,9 @@ public class H264Player1 implements Runnable {
 //完整帧 I P  B帧
                 ByteBuffer byteBuffer =mediaCodec.getOutputBuffer(outIndex);
 
+//                Image image = mediaCodec.getOutputImage(outIndex);
+//                int height = image.getHeight();
+
                 byteBuffer.position(info.offset);
                 byteBuffer.limit(info.offset + info.size);
 //图像  Java C++

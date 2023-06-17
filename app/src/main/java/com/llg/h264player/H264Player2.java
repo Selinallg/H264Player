@@ -24,8 +24,8 @@ public class H264Player2 implements Runnable {
     private static final String  TAG = "H264Player";
     private              Context context;
 
-//    private static final String  CODE_TYPE = MediaFormat.MIMETYPE_VIDEO_HEVC;
-    private static final String  CODE_TYPE = MediaFormat.MIMETYPE_VIDEO_AVC;
+    private static final String  CODE_TYPE = MediaFormat.MIMETYPE_VIDEO_HEVC;
+//    private static final String  CODE_TYPE = MediaFormat.MIMETYPE_VIDEO_AVC;
 //    private static final String  CODE_TYPE = "video/avc";
     private String     path;
     //mediaCodec   手机硬件不一样    dsp  芯片  不一样
@@ -45,6 +45,7 @@ public class H264Player2 implements Runnable {
         this.surface = surface;
         this.path = path;
         this.context = context;
+        Log.d(TAG, "H264Player2: path="+path);
 
         try {
 //            h265  --ISO hevc  兼容 硬编   不兼容   电视    -----》8k  4K
@@ -59,12 +60,18 @@ public class H264Player2 implements Runnable {
 
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 368, 384);
             //MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 2880, 1600);
-            MediaFormat mediaformat = MediaFormat.createVideoFormat(CODE_TYPE, 2880, 1600);
+//            MediaFormat mediaformat = MediaFormat.createVideoFormat(CODE_TYPE, 2880, 1600);
+            MediaFormat mediaformat = MediaFormat.createVideoFormat(CODE_TYPE, 2160, 1200);
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 4320, 2160);
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 2160, 4320);
 
 //            MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", 368, 384);
 //            mediaformat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
+
+//            mediaformat.setInteger(MediaFormat.KEY_WIDTH, 2160);
+//            mediaformat.setInteger(MediaFormat.KEY_HEIGHT, 1200);
+//            mediaformat.setInteger(MediaFormat.KEY_MAX_WIDTH, 2160);
+//            mediaformat.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1200);
 
 
             if (useAsyncDecode) {
@@ -103,6 +110,10 @@ public class H264Player2 implements Runnable {
             try {
 //            偷懒   文件  加载内存     文件 1G  1G
                 bytes = getBytes(path);
+
+//                ByteBuffer buffer = removePrivData(bytes, bytes[0]);
+//                bytes = buffer.array();
+
                 totalSize = bytes.length;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -204,7 +215,7 @@ public class H264Player2 implements Runnable {
 
 
     boolean useYUV         = false;//
-    boolean useAsyncDecode = true;//  false 同步 true 异步 解码
+    boolean useAsyncDecode = false;//  false 同步 true 异步 解码
     int     startIndex     = 0;
     int     totalSize      = 0;
 
@@ -296,4 +307,67 @@ public class H264Player2 implements Runnable {
             Log.d(TAG, "onOutputFormatChanged: ");
         }
     };
+
+
+    private ByteBuffer removePrivData(byte[] bytes, int bufLen) {
+        //数据内容 heaer + posedata + framedata;
+        int headerOffer = 0;
+        int len = 0;
+
+        //移除头部数据
+        if (bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0x00 && bytes[3] == 0x01 && bytes[4] == 0x1a) {
+            if (bytes[5] == 'V' && bytes[6] == 'R' && bytes[8] == 'H') {
+                int privdataDlen = (bytes[9] & 0xff) |
+                        ((bytes[10] << 8) & 0xff00) |
+                        ((bytes[11] << 16) & 0xff0000) |
+                        ((bytes[12] << 24) & 0xff000000);
+
+                headerOffer = 5 + 4 + privdataDlen;
+                len = bufLen - headerOffer;
+            }
+        } else {
+            Log.i(TAG, "no found private header");
+            headerOffer = 0;
+            len = bufLen;
+        }
+
+        //移除尾部数据
+        len -= checkSpecialTailLen(bytes, bufLen);
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(len);
+        byteBuffer.put(bytes, headerOffer, len);
+        return byteBuffer;
+    }
+
+    public static int checkSpecialTailLen(byte[] bytes, int bytesLen) {
+        if (bytes != null && bytesLen >= 18) {
+            byte[] tailBuff = new byte[4];
+            System.arraycopy(bytes, bytesLen - 4, tailBuff, 0, 4);
+            if (tailBuff[0] == 0 && tailBuff[1] == 0 && tailBuff[2] == 1 && tailBuff[3] == 0) {
+                byte[] specialTailBuffer17 = new byte[17];
+                System.arraycopy(bytes, bytesLen - 17, specialTailBuffer17, 0, 17);
+                byte[] specialTailBuffer16 = new byte[16];
+                System.arraycopy(bytes, bytesLen - 16, specialTailBuffer16, 0, 16);
+                if (isHasSpecialTail(specialTailBuffer17)) {
+                    return 18;
+                }
+
+                if (isHasSpecialTail(specialTailBuffer16)) {
+                    return 17;
+                }
+            }
+
+            return 0;
+        } else {
+            return 0;
+        }
+    }
+
+    public static boolean isVaildVideoData(byte[] bytes) {
+        return bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 1;
+    }
+
+    public static boolean isHasSpecialTail(byte[] bytes) {
+        return bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 1 && bytes[3] == 30 && bytes[4] == 72 && bytes[5] == 83 && bytes[6] == 80;
+    }
 }
